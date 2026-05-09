@@ -199,6 +199,7 @@ export interface FutureLetter {
   isRead: boolean;
   videoUrl?: string;
   audioUrl?: string;
+  albumUrls?: string[];
 }
 
 export interface OrganBadge {

@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { FutureLetter, GamificationState } from "../App";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { generateFutureLetter, generateVeoVideo, generateSpeech } from "../services/geminiService";
-import { Loader2, Mail, Play, Sparkles, Video, Volume2 } from "lucide-react";
+import { generateFutureLetter, generateSpeech, generateFutureAlbumImages } from "../services/geminiService";
+import { Loader2, Mail, Play, Sparkles, Image, Volume2, X } from "lucide-react";
 import { doc, updateDoc } from "../lib/localDb";
 import { db } from "../lib/localDb";
 import ReactMarkdown from "react-markdown";
 import { ModuleInfoDialog } from './ModuleInfoDialog';
+import { motion, AnimatePresence } from "motion/react";
 
 interface FutureLettersSectionProps {
   userId: string;
@@ -28,6 +29,8 @@ export function FutureLettersSection({
 }: FutureLettersSectionProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+
   const handleGenerateLetter = async () => {
     if (!userId || simulations.length === 0) return;
     setIsGenerating(true);
@@ -40,8 +43,8 @@ export function FutureLettersSection({
       // 2. Generate text
       const letterContent = await generateFutureLetter(profileCtx, metricsCtx);
 
-      // 3. Try to generate video & audio
-      let videoUrl: string | undefined = undefined;
+      // 3. Try to generate album & audio
+      let albumUrls: string[] | undefined = undefined;
       let audioUrl: string | undefined = undefined;
 
       try {
@@ -49,11 +52,11 @@ export function FutureLettersSection({
         
         if (faceImage) {
           const strictGender = userProfile.gender.toLowerCase();
-          const prompt = `A cinematic, realistic, dramatic portrait video of a ${age + 10} year old ${strictGender}. The subject MUST be a ${strictGender}, matching the identity and features of the provided reference image. Soft, emotional lighting. Looking at the camera understandingly. The character is speaking the following message: "${letterContent}"`;
+          const prompt = `Cinematic, hyper-realistic, wide aspect ratio (16:9) photo album of a ${age + 10} year old ${strictGender}. The subject MUST be a ${strictGender}, matching the identity and features of the provided reference image. The appearance MUST be normal, without any medical imagery or annotations. Show a reflection of a peaceful, active, and successful future life. You MUST strictly output 3 distinctive images depicting these 3 scenes: 1. Wearing casual wear relaxing or walking in a beautiful park or sunny cafe. 2. Wearing athletic wear actively engaging in a physical activity (e.g., at the gym, running, or active walking). 3. Wearing elegant or smart-casual wear in a modern cozy living room or nice indoor setting.`;
           
           generationPromises.push(
-            generateVeoVideo(prompt, faceImage, undefined, "16:9").then(vUrl => {
-              if (vUrl) videoUrl = vUrl;
+            generateFutureAlbumImages(prompt, faceImage).then(urls => {
+              if (urls && urls.length > 0) albumUrls = urls;
             }).catch(console.error)
           );
         }
@@ -76,7 +79,7 @@ export function FutureLettersSection({
         date: new Date().toISOString(),
         content: letterContent,
         isRead: false,
-        videoUrl,
+        albumUrls,
         audioUrl
       };
 
@@ -157,11 +160,18 @@ export function FutureLettersSection({
                 <ReactMarkdown>{letter.content}</ReactMarkdown>
               </div>
 
-              {letter.videoUrl && (
-                <div className="mt-4 pt-4 border-t border-slate-200/60">
-                   <a href={letter.videoUrl} target="_blank" rel="noreferrer" className="flex items-center text-xs font-semibold text-purple-600 hover:text-purple-700">
-                     <Video className="w-4 h-4 mr-1"/> View Attached Memory
-                   </a>
+              {letter.albumUrls && letter.albumUrls.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-slate-200/60">
+                   <div className="flex items-center text-xs font-semibold text-purple-600 mb-3 uppercase tracking-wider">
+                     <Image className="w-4 h-4 mr-1.5"/> Attached Memories
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                     {letter.albumUrls.map((url, idx) => (
+                       <button key={idx} onClick={() => setEnlargedImage(url)} className="block aspect-[16/9] overflow-hidden rounded-md border border-slate-200 bg-slate-50 transition hover:ring-2 hover:ring-purple-400">
+                         <img src={url} alt={`Memory ${idx + 1}`} className="w-full h-full object-cover" />
+                       </button>
+                     ))}
+                   </div>
                 </div>
               )}
               {letter.audioUrl && (
@@ -176,6 +186,41 @@ export function FutureLettersSection({
           </Card>
         ))}
       </div>
+
+      {/* Enlarged Image Modal */}
+      <AnimatePresence>
+        {enlargedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+            onClick={() => setEnlargedImage(null)}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 text-white hover:bg-white/20"
+              onClick={() => setEnlargedImage(null)}
+            >
+              <X className="w-6 h-6" />
+            </Button>
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="relative max-w-5xl w-full max-h-[90vh] flex justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={enlargedImage}
+                alt="Enlarged Memory"
+                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

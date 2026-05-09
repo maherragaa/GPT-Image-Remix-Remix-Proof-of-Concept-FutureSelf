@@ -285,6 +285,125 @@ export async function generateHealthImage(prompt: string, referenceImage?: strin
   }
 }
 
+export async function generateFutureAlbumImages(prompt: string, referenceImage?: string, retries = 2): Promise<string[]> {
+  let apiKey = (import.meta as any).env?.VITE_OPENAI_API_KEY;
+  try {
+    if (!apiKey) {
+      apiKey = process.env.OPENAI_API_KEY;
+    }
+  } catch (e) { }
+
+  if (!apiKey) {
+    console.warn("No OpenAI API key found for image generation.");
+    return [];
+  }
+
+  const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true, maxRetries: retries });
+
+  let promptContent: any = [
+    { type: "input_text", text: prompt + "\n\nCRITICAL INSTRUCTION: You MUST call the image_generation tool EXACTLY 3 times to generate 3 separate images in different nice settings." }
+  ];
+  if (referenceImage) {
+    if (referenceImage.startsWith('http') || referenceImage.startsWith('data:image')) {
+      promptContent = [
+        { type: "input_text", text: prompt + "\n\nCRITICAL INSTRUCTION: You MUST call the image_generation tool EXACTLY 3 times to generate 3 separate images in different nice settings." },
+        { type: "input_image", image_url: referenceImage }
+      ];
+    }
+  }
+
+  try {
+    const response = await openai.responses.create({
+      model: "gpt-5.4-mini",
+      input: [
+        {
+          role: "user",
+          content: promptContent
+        }
+      ],
+      text: { "format": { "type": "text" }, "verbosity": "low" },
+      reasoning: { "effort": "low" },
+      tools: [
+        {
+          "type": "image_generation",
+          "model": "gpt-image-2",
+          "size": "1024x1024",
+          "quality": "medium",
+          "output_format": "png",
+          "background": "auto",
+          "moderation": "low",
+          "partial_images": 0
+        } as any
+      ],
+      store: true,
+      include: ["reasoning.encrypted_content", "web_search_call.action.sources"]
+    } as any);
+
+    let imageUrls: string[] = [];
+    const findImages = (obj: any) => {
+      if (!obj) return;
+      if (typeof obj === 'string') {
+        if (obj.startsWith('data:image/') || obj.startsWith('http')) {
+          if (!imageUrls.includes(obj)) imageUrls.push(obj);
+        } else if (obj.length > 1000 && /^[A-Za-z0-9+/=]+$/.test(obj)) {
+          const rawUrl = `data:image/png;base64,${obj}`;
+          if (!imageUrls.includes(rawUrl)) imageUrls.push(rawUrl);
+        }
+        return;
+      }
+      if (typeof obj === 'object') {
+        if (obj.url && !imageUrls.includes(obj.url)) imageUrls.push(obj.url);
+        if (obj.b64_json) {
+          const rawUrl = `data:image/png;base64,${obj.b64_json}`;
+          if (!imageUrls.includes(rawUrl)) imageUrls.push(rawUrl);
+        }
+        if (obj.base64) {
+          const rawUrl = `data:image/png;base64,${obj.base64}`;
+          if (!imageUrls.includes(rawUrl)) imageUrls.push(rawUrl);
+        }
+        Object.values(obj).forEach(findImages);
+      }
+    };
+    findImages(response);
+
+    const compressedUrls = await Promise.all(imageUrls.map(async (rawUrl) => {
+      try {
+        if (rawUrl.startsWith('data:')) {
+           return await compressImageHelper(rawUrl, 1024, 1024, 0.85);
+        }
+        return rawUrl;
+      } catch (e) {
+        return rawUrl;
+      }
+    }));
+
+    if (compressedUrls.length > 0) return compressedUrls;
+
+    const fallbackResponse = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt.substring(0, 3999),
+      n: 1,
+      size: "1024x1024",
+      response_format: "b64_json"
+    });
+    
+    if (fallbackResponse && fallbackResponse.data && fallbackResponse.data.length > 0 && fallbackResponse.data[0].b64_json) {
+       const fallbackRwUrl = `data:image/png;base64,${fallbackResponse.data[0].b64_json}`;
+       try {
+          const comp = await compressImageHelper(fallbackRwUrl, 1024, 1024, 0.85);
+          return [comp];
+       } catch (e) {
+          return [fallbackRwUrl];
+       }
+    }
+    return [];
+
+  } catch (error) {
+    console.error("OpenAI image album generation failed:", error);
+    return [];
+  }
+}
+
 export async function generateActionPlan(
   age: number,
   gender: string,
