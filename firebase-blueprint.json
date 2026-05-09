@@ -1,0 +1,192 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and role metadata.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address if registered."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "user", "guest"],
+          "description": "The RBAC role of the user."
+        },
+        "isAnonymous": {
+          "type": "boolean",
+          "description": "Whether the user is a guest."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["role", "isAnonymous", "createdAt"]
+    },
+    "HealthProfile": {
+      "title": "HealthProfile",
+      "description": "The core simulation input parameters for a user.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "age": { "type": "number" },
+        "gender": { "type": "string" },
+        "height": { "type": "number" },
+        "weight": { "type": "number" },
+        "activityLevel": { "type": "string" },
+        "diet": { "type": "string" },
+        "smokingStatus": { "type": "string" },
+        "diseaseConditions": { "type": "string" },
+        "stressLevel": { "type": "string" },
+        "sleepQuality": { "type": "string" },
+        "totalCholesterol": { "type": "number", "description": "mg/dL" },
+        "ldl": { "type": "number", "description": "mg/dL" },
+        "hdl": { "type": "number", "description": "mg/dL" },
+        "lpa": { "type": "number", "description": "mg/dL" },
+        "randomGlucose": { "type": "number", "description": "mg/dL" },
+        "hba1c": { "type": "number", "description": "%" },
+        "bloodPressureSystolic": { "type": "number", "description": "mmHg" },
+        "bloodPressureDiastolic": { "type": "number", "description": "mmHg" },
+        "faceImage": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "age", "gender", "height", "weight", "activityLevel", "diet", "updatedAt"]
+    },
+    "FoodLog": {
+      "title": "FoodLog",
+      "description": "A single food log entry.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "id": { "type": "string" },
+        "foodName": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "imageUrl": { "type": "string" },
+        "analysis": {
+          "type": "object",
+          "properties": {
+            "calories": { "type": "number" },
+            "healthScore": { "type": "number" },
+            "healthScoreExplanation": { "type": "string" },
+            "improvementSuggestion": { "type": "string" },
+            "macros": {
+              "type": "object",
+              "properties": {
+                "protein": { "type": "string" },
+                "carbs": { "type": "string" },
+                "fats": { "type": "string" }
+              }
+            },
+            "details": { "type": "string" },
+            "impactOnArteries": { "type": "string" },
+            "impactOnHeart": { "type": "string" },
+            "impactOnBody": { "type": "string" }
+          },
+          "required": ["calories", "healthScore", "details", "impactOnArteries", "impactOnHeart", "impactOnBody"]
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "foodName", "date", "analysis"]
+    },
+    "MoodLog": {
+      "title": "MoodLog",
+      "description": "A single mood log entry.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "emoji": { "type": "string" },
+        "intensity": { "type": "number" },
+        "stressLevel": { "type": "number" },
+        "sleepHours": { "type": "number" },
+        "notes": { "type": "string" },
+        "triggers": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "analysis": {
+          "type": "object",
+          "properties": {
+            "emotionalPattern": { "type": "string" },
+            "impactOnBrain": { "type": "string" },
+            "impactOnHeart": { "type": "string" },
+            "impactOnBody": { "type": "string" },
+            "recommendation": { "type": "string" }
+          },
+          "required": ["emotionalPattern", "impactOnBrain", "impactOnHeart", "impactOnBody", "recommendation"]
+        }
+      },
+      "required": ["uid", "date", "emoji", "intensity", "stressLevel", "sleepHours", "notes"]
+    },
+    "BiomarkerLog": {
+      "title": "BiomarkerLog",
+      "description": "A single biomarker log entry.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "totalCholesterol": { "type": "number" },
+        "ldl": { "type": "number" },
+        "hdl": { "type": "number" },
+        "lpa": { "type": "number" },
+        "randomGlucose": { "type": "number" },
+        "hba1c": { "type": "number" },
+        "bloodPressureSystolic": { "type": "number" },
+        "bloodPressureDiastolic": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "analysis": {
+          "type": "object",
+          "properties": {
+            "overallStatus": { "type": "string" },
+            "criticalAlerts": { "type": "array", "items": { "type": "string" } },
+            "improvements": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["overallStatus"]
+        }
+      },
+      "required": ["uid", "date"]
+    },
+    "SimulationData": {
+      "title": "SimulationData",
+      "description": "The latest generated simulation data summary.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "simulationsJson": { "type": "string", "description": "Stringified array of HealthSimulations." },
+        "optimizedSimulationsJson": { "type": "string" },
+        "actionPlan": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "simulationsJson", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User account information and roles."
+    },
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/HealthProfile" },
+      "description": "User's health data used as parameters for the AI simulation."
+    },
+    "/foodLogs/{logId}": {
+      "schema": { "$ref": "#/entities/FoodLog" },
+      "description": "Global collection of food logs, filtered by uid field."
+    },
+    "/moodLogs/{logId}": {
+      "schema": { "$ref": "#/entities/MoodLog" },
+      "description": "Global collection of mood logs, filtered by uid field."
+    },
+    "/biomarkerLogs/{logId}": {
+      "schema": { "$ref": "#/entities/BiomarkerLog" },
+      "description": "Global collection of biomarker logs, filtered by uid field."
+    },
+    "/simulations/{userId}": {
+      "schema": { "$ref": "#/entities/SimulationData" },
+      "description": "Latest simulation state cache per user."
+    }
+  }
+}

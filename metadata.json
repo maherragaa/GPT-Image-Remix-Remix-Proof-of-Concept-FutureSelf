@@ -1,0 +1,9 @@
+{
+  "name": "GPT Image Remix: Remix: Proof of Concept FutureSelf",
+  "description": "Demoed to Novartis Reg team 1st of May 2026 - Visualize how your everyday lifestyle and psychology choices impact your long-term holistic health.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
