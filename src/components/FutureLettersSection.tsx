@@ -75,7 +75,7 @@ export function FutureLettersSection({
       
 
       const newLetter: FutureLetter = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         date: new Date().toISOString(),
         content: letterContent,
         isRead: false,

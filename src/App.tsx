@@ -1368,6 +1368,12 @@ export default function App() {
   const [actionPlan, setActionPlan] = useState<string | null>(null);
   const [hcpReport, setHcpReport] = useState<string | null>(null);
   const [generatingHcp, setGeneratingHcp] = useState(false);
+
+  const timelineReadyTriggered = useRef(false);
+  const takeControlReadyTriggered = useRef(false);
+  const [showTimelineToast, setShowTimelineToast] = useState(false);
+  const [showTakeControlToast, setShowTakeControlToast] = useState(false);
+
   const [showHcpModal, setShowHcpModal] = useState(false);
   const [loadingActionPlan, setLoadingActionPlan] = useState(false);
   const [generatingQuests, setGeneratingQuests] = useState(false);
@@ -2037,7 +2043,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
           parsed.healthScore = 50;
         }
 
-        const newLogId = Date.now().toString();
+        const newLogId = crypto.randomUUID();
         const newLog: FoodLog = {
           uid: user.uid,
           id: newLogId,
@@ -2224,7 +2230,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
           parsed.healthScore = 50;
         }
 
-        const newLogId = Date.now().toString();
+        const newLogId = crypto.randomUUID();
         let finalImageUrl = "";
 
         try {
@@ -2603,12 +2609,18 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
     }
   };
 
-  const chartData = simulations.map((sim) => {
+  const seenNames = new Set<string>();
+  const chartData = simulations.map((sim, index) => {
     const optSim = optimizedSimulations.find(
       (o) => o.timeframe === sim.timeframe,
     );
+    let finalName = sim.timeframe || `Step ${index}`;
+    if (seenNames.has(finalName)) {
+      finalName = `${finalName} (*)`;
+    }
+    seenNames.add(finalName);
     return {
-      name: sim.timeframe,
+      name: finalName,
       "Current Trajectory": sim.overallRisk,
       "Optimized Trajectory": optSim ? optSim.overallRisk : 0,
     };
@@ -2948,10 +2960,10 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
       if (imageStyle === "avatar") {
         const agingTextAvatar =
           yearsElapsed > 0
-            ? `The provided reference image is of the character at younger age. Edit this reference image to age them by ${yearsElapsed} years to reach chronological age ${simAge} (Biological age: ${biologicalAge}).`
-            : `Create the initial character image representing chronological age ${simAge} (Biological age: ${biologicalAge}).`;
+            ? `The provided reference image is of the avatar at younger age. Edit this reference image to age them by ${yearsElapsed} years to reach chronological age ${simAge} (Biological age: ${biologicalAge}).`
+            : `Create the initial avatar image representing chronological age ${simAge} (Biological age: ${biologicalAge}).`;
 
-        finalBodyPrompt = `A high-quality 3D digital realistic avatar character illustration. ${avatarDesc ? "Base Character Visual Description: " + avatarDesc + "." : ""} ${agingTextAvatar} Current Health State: ${sim.avatarState}. Lifestyle: ${currentDiet} diet, ${currentActivity}, Conditions: ${diseaseConditions || "None"}. Render a FULL BODY perspective (standing from head to toe). They must be wearing ${outfit}. Show the physical effects of their lifestyle and conditions. CRITICAL MEDICAL REQUIREMENT: You MUST render parts of the character's skin/body as transparent or "glass-like" to clearly reveal internal systems, organs, or anatomical structures that have abnormalities, diseases, or damage related to their conditions. If there are visible skin conditions, render them prominently on the visible skin surface. Include 3-5 clear text labels pointing to specific areas. Include a summary of user info: ${userSummary}. ${clinicalConstraints} CRITICAL: All text labels MUST be written in ${language}. Clean white background.`;
+        finalBodyPrompt = `A high-quality 3D digital realistic avatar illustration. ${avatarDesc ? "Base Avatar Visual Description: " + avatarDesc + "." : ""} ${agingTextAvatar} Current Health State: ${sim.avatarState}. Lifestyle: ${currentDiet} diet, ${currentActivity}, Conditions: ${diseaseConditions || "None"}. Render a FULL BODY perspective (standing from head to toe). They must be wearing ${outfit}. Show the physical effects of their lifestyle and conditions. CRITICAL MEDICAL REQUIREMENT: You MUST render parts of the avatar's skin/body as transparent or "glass-like" to clearly reveal internal systems, organs, or anatomical structures that have abnormalities, diseases, or damage related to their conditions. If there are visible skin conditions, render them prominently on the visible skin surface. Include 3-5 clear text labels pointing to specific areas. Include a summary of user info: ${userSummary}. ${clinicalConstraints} CRITICAL: All text labels MUST be written in ${language}. Clean white background.`;
 
         finalBodyReference = referenceImages?.body || undefined;
       }
@@ -3058,6 +3070,42 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
       }
     }
   };
+
+  const isTimelineImagesReady = !!(
+    generatedImages["Now"]?.body &&
+    generatedImages[selectedFuture]?.body &&
+    !generatingImages["Now"] &&
+    !generatingImages[selectedFuture]
+  );
+
+  const isTakeControlReady = !!(
+    generatedImages[selectedFuture]?.body &&
+    optimizedImages?.body &&
+    !generatingImages[selectedFuture] &&
+    !generatingOptimizedImage
+  );
+
+  useEffect(() => {
+    if (isTimelineImagesReady && !timelineReadyTriggered.current) {
+      timelineReadyTriggered.current = true;
+      setShowTimelineToast(true);
+      setTimeout(() => setShowTimelineToast(false), 5000);
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Timeline Ready!", { body: "Your visual timeline comparing your current and past self is ready.", icon: "/vite.svg" });
+      }
+    }
+  }, [isTimelineImagesReady]);
+
+  useEffect(() => {
+    if (isTakeControlReady && !takeControlReadyTriggered.current) {
+      takeControlReadyTriggered.current = true;
+      setShowTakeControlToast(true);
+      setTimeout(() => setShowTakeControlToast(false), 5000);
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Optimized Future Ready!", { body: "Your 'Take Control of Your Future' optimized simulation is ready.", icon: "/vite.svg" });
+      }
+    }
+  }, [isTakeControlReady]);
 
   if (!hasApiKey) {
     return <ApiKeySetup onComplete={() => setHasApiKey(true)} />;
@@ -3941,9 +3989,9 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                                       Ready to Import:
                                     </strong>
                                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-green-800">
-                                      {extractionResult.found.map((f) => (
+                                      {extractionResult.found.map((f, i) => (
                                         <li
-                                          key={f}
+                                          key={f + i}
                                           className="flex items-center"
                                         >
                                           <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></div>
@@ -3960,9 +4008,9 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                                       Missing Variables:
                                     </strong>
                                     <ul className="flex flex-wrap gap-2 text-amber-700">
-                                      {extractionResult.missing.map((m) => (
+                                      {extractionResult.missing.map((m, i) => (
                                         <li
-                                          key={m}
+                                          key={m + i}
                                           className="bg-amber-100/50 px-2 py-1 rounded text-xs font-medium border border-amber-200/50"
                                         >
                                           {m}
@@ -4439,7 +4487,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                                   3D Avatar (Default)
                                 </span>
                                 <span className="text-xs text-slate-500 mt-1">
-                                  Stylized character
+                                  Stylized avatar
                                 </span>
                               </motion.button>
                               <motion.button
@@ -4594,6 +4642,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
           <AnimatePresence>
             {loading && (
               <motion.div
+                key="loading-overlay"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.1 }}
@@ -4890,6 +4939,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                         <AnimatePresence>
                           {showTimeEarnedAnim > 0 && (
                             <motion.div
+                              key={"time-earn-" + showTimeEarnedAnim}
                               initial={{ opacity: 0, y: 15, scale: 0.5 }}
                               animate={{ opacity: 1, y: -25, scale: 1.2 }}
                               exit={{ opacity: 0, scale: 0.8 }}
@@ -4994,6 +5044,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                     >
                       {/* Bottom Row: Simulation Comparison */}
                       <div className="space-y-4">
+                        {isTimelineImagesReady && (
                         <div className="flex items-center bg-white p-4 rounded-none md:rounded-lg">
                           <h3 className="text-lg font-semibold flex items-center mb-0">
                             <Activity className="w-5 h-5 mr-2 text-black/60" />
@@ -5009,6 +5060,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                             />
                           </h3>
                         </div>
+                        )}
 
                         <div className="grid grid-cols-1">
                           {(() => {
@@ -5171,8 +5223,12 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
 
                             return (
                               <div className="space-y-8">
-                                {renderOrganComparison("External Body", "body")}
-                                {renderOrganComparison("Arteries", "arteries")}
+                                {isTimelineImagesReady && (
+                                  <>
+                                    {renderOrganComparison("External Body", "body")}
+                                    {renderOrganComparison("Arteries", "arteries")}
+                                  </>
+                                )}
 
                                 {/* Metrics Comparison */}
                                 <Card
@@ -5416,6 +5472,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                     </motion.div>
 
                     {/* Tab Content: Optimized Future */}
+                    {isTakeControlReady && (
                     <motion.div
                       variants={dashboardItemVariants}
                       id="section-take-control"
@@ -5588,6 +5645,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                         </MobileCarousel>
                       </div>
                     </motion.div>
+                    )}
 
                     {/* Tab Content: Action Plan */}
                     <motion.div
@@ -5706,6 +5764,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       <AnimatePresence>
                         {parsedActionPlan && (
                           <motion.div
+                            key="action-plan"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="space-y-6 pt-4"
@@ -6454,6 +6513,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
           <AnimatePresence>
             {enlargedImage && (
               <motion.div
+                key="enlarged-img"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -6475,6 +6535,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
           <AnimatePresence>
             {showHcpModal && hcpReport && (
               <motion.div
+                key="hcp-modal"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -6572,6 +6633,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
           <AnimatePresence>
             {showPocModal && (
               <motion.div
+                key="poc-modal"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -6659,7 +6721,8 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                 <AnimatePresence initial={false}>
                   {!isToolbarCollapsed && (
                     <motion.div
-                    initial={{ opacity: 0, width: 0, height: 0 }}
+                      key="toolbar-inner"
+                      initial={{ opacity: 0, width: 0, height: 0 }}
                     animate={{ opacity: 1, width: "auto", height: "auto" }}
                     exit={{ opacity: 0, width: 0, height: 0 }}
                     className="flex flex-col items-center space-y-3 py-3 px-2 overflow-visible scrollbar-hide"
@@ -6684,6 +6747,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       <AnimatePresence>
                         {showSectionsMenu && (
                           <motion.div
+                            key="sections-menu"
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
@@ -6918,6 +6982,43 @@ ${actionPlan ? actionPlan : "No action plan generated yet. The user needs to 'Ge
           />
         </div>
       </div>
+
+      {/* Pop-up notifications */}
+      <AnimatePresence>
+        {showTimelineToast && (
+          <motion.div
+            key="timeline-toast"
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-24 right-4 z-[100] bg-[#3D2B56] text-white p-4 rounded-xl shadow-2xl flex items-center space-x-3 max-w-sm"
+          >
+            <div className="bg-indigo-500/20 p-2 rounded-full">
+              <Activity className="w-5 h-5 text-indigo-300" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Timeline Ready</p>
+              <p className="text-white/70 text-xs">Your visual time-lapse is fully processed.</p>
+            </div>
+          </motion.div>
+        )}
+        {showTakeControlToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-8 right-4 z-[100] bg-indigo-600 text-white p-4 rounded-xl shadow-2xl flex items-center space-x-3 max-w-sm"
+          >
+            <div className="bg-white/20 p-2 rounded-full">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Optimized Future Ready</p>
+              <p className="text-white/70 text-xs text-balance">The 'Take Control' prediction is completed.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </TooltipProvider>
   );
 }

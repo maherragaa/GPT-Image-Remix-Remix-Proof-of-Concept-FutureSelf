@@ -1494,11 +1494,11 @@ export async function extractAvatarDescription(
   base64Image?: string
 ): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  const prompt = `You are an expert character designer. Your task is to generate a comprehensive, visually rich 1-paragraph description of a realistic 3D digital avatar character representing a user.
+  const prompt = `You are an expert avatar designer. Your task is to generate a comprehensive, visually rich 1-paragraph description of a realistic 3D digital avatar representing a user.
 Demographics: Age ${age}, Gender ${gender}, Height ${height}cm, Weight ${weight}kg, BMI ${bmi}.
 Be highly descriptive about their body shape (underweight, athletic, average, overweight, obese, etc.) according to the BMI/weight/height.
-${base64Image ? "Also attached is a photo of the user. Incorporate their facial features, skin tone, eye color, hair color/style, and general vibe into the avatar character design." : "Do your best to define an accurate physical look for this demographic."}
-Keep it to one paragraph. Avoid mentioning age or demographic numbers directly. Focus heavily on visual physical descriptions, body proportions, and facial features. Do not talk about the final image style, just the character's physical description and properties!`;
+${base64Image ? "Also attached is a photo of the user. Incorporate their facial features, skin tone, eye color, hair color/style, and general vibe into the avatar design." : "Do your best to define an accurate physical look for this demographic."}
+Keep it to one paragraph. Avoid mentioning age or demographic numbers directly. Focus heavily on visual physical descriptions, body proportions, and facial features. Do not talk about the final image style, just the avatar's physical description and properties!`;
 
   const contents: any[] = [{ role: "user", parts: [{ text: prompt }] }];
   
@@ -1522,11 +1522,11 @@ Keep it to one paragraph. Avoid mentioning age or demographic numbers directly. 
               model: 'gemini-3.1-flash-lite-preview',
               contents: contents
           });
-          return response.text || "A standard avatar character.";
+          return response.text || "A standard avatar.";
       } catch (error: any) {
           console.error(`Failed to extract avatar desc (attempt ${attempt + 1}/${maxRetries + 1}):`, error);
           if (attempt === maxRetries) {
-              return "A standard avatar character.";
+              return "A standard avatar.";
           }
           
           const errorMsg = error?.message || error?.toString() || "";
@@ -1537,10 +1537,10 @@ Keep it to one paragraph. Avoid mentioning age or demographic numbers directly. 
               attempt++;
               await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempt)));
           } else {
-              return "A standard avatar character.";
+              return "A standard avatar.";
           }
       }
   }
-  return "A standard avatar character.";
+  return "A standard avatar.";
 }
 

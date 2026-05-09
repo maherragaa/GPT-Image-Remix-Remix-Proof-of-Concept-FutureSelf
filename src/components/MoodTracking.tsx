@@ -121,7 +121,7 @@ export function MoodTracking({ moodLogs, setHasNewMoodLog, userProfileContext, e
       const fullContextNotes = `${notes}\nTriggers: ${selectedTriggers.join(', ')}`;
       const emoji = getEmojiForSub();
       const analysis = await analyzeMood(emoji, activeCoreLayer, selectedSubEmotion, somaticLocations, intensity, stressLevel, sleepHours, fullContextNotes, userProfileContext, language);
-      const newLogId = Date.now().toString();
+      const newLogId = crypto.randomUUID();
       
       const newLog: MoodLog = {
         uid: user.uid,
