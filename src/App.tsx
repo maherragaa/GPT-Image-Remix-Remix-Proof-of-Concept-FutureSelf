@@ -4695,7 +4695,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
               id="section-top"
             >
               {/* Sticky Profile Header */}
-              <div className="relative md:sticky md:top-2 z-40 bg-white/90 backdrop-blur-xl rounded-none md:rounded-xl md:rounded-xl border-y md:border border-slate-200/60 p-3 md:p-5 transition-all hover: flex flex-col gap-3 md:gap-4 overflow-hidden">
+              <div className="sticky top-0 md:top-2 z-50 bg-white/95 backdrop-blur-xl rounded-b-2xl md:rounded-xl border-b md:border border-slate-200/60 p-3 md:p-5 transition-all flex flex-col gap-3 md:gap-4 overflow-hidden shadow-sm md:shadow-none">
                 <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 md:gap-5">
                   {/* Top Row (Mobile): Profile Stats & Action Button side-by-side */}
                   <div className="flex flex-row flex-wrap items-center justify-between w-full xl:w-auto shrink-0 gap-2">
@@ -4705,9 +4705,11 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                         {age}
                       </div>
                       <div className="flex flex-col justify-center">
-                        <p className="text-[9px] md:text-[10px] font-bold text-[#9081B1] tracking-wider uppercase mb-0.5 hidden sm:block">
-                          Baseline Frame
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[9px] md:text-[10px] font-bold text-[#9081B1] tracking-wider uppercase mb-0.5 hidden sm:block">
+                            Baseline Frame
+                          </p>
+                        </div>
                         <p className="text-sm text-slate-800 font-bold leading-none mb-1 md:leading-tight md:mb-0">
                           BMI: {bmi}{" "}
                           <span className="text-slate-300 mx-1">•</span>{" "}
@@ -4963,6 +4965,52 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                     </Button>
                   </div>
                 </div>
+
+                {/* News Ticker for Image Generation Progress */}
+                <AnimatePresence>
+                  {(Object.values(generatingImages).some((v) => v) || generatingOptimizedImage) && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="w-full"
+                    >
+                      <div className="w-full bg-slate-900 text-cyan-400 font-mono font-bold text-[10px] sm:text-[11px] uppercase tracking-widest h-7 sm:h-8 flex items-center rounded overflow-hidden shadow-inner relative whitespace-nowrap border border-cyan-500/20">
+                        <div className="bg-cyan-600 text-white px-2 sm:px-3 h-full z-20 flex items-center shrink-0 border-r-2 border-cyan-400 shadow-[2px_0_10px_rgba(0,0,0,0.5)]">
+                          <Camera className="w-3 h-3 sm:mr-1.5 animate-pulse" /> 
+                          <span className="hidden sm:inline ml-1.5">IMAGE SIMULATOR</span>
+                        </div>
+                        
+                        <div className="flex-1 h-full relative overflow-hidden flex items-center">
+                          <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-slate-900 to-transparent w-8 z-10 pointer-events-none" />
+                          <div className="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-slate-900 to-transparent w-8 z-10 pointer-events-none" />
+                          <motion.div
+                            animate={{ x: ["0%", "-50%"] }}
+                            transition={{ repeat: Infinity, ease: "linear", duration: 30 }}
+                            className="flex items-center space-x-8 px-4 whitespace-nowrap"
+                            style={{ width: "fit-content" }}
+                          >
+                          {(() => {
+                              let msg = "";
+                              if (generatingImages["Now"]) msg += "✦ DRAFTING BASELINE IDENTITY... ";
+                              const tf = Object.keys(generatingImages).find(k => k !== "Now" && generatingImages[k]);
+                              if (tf) msg += `✦ SIMULATING ${tf.toUpperCase()}... `;
+                              if (generatingOptimizedImage) msg += "✦ RENDERING OPTIMAL HEALTH PATH... ";
+                              if (!msg) msg = "✦ GENERATING IMAGES... ";
+                              
+                              const repetitions = 20; // 10 for the first half, 10 for the second half
+                              let elements = [];
+                              for (let i = 0; i < repetitions; i++) {
+                                elements.push(<span key={i} className="flex-shrink-0">{msg}</span>);
+                              }
+                              return elements;
+                          })()}
+                        </motion.div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Bottom Row: Badges - completely hidden on very small mobile, visible on sm and up */}
                 <div className="hidden sm:flex pt-3 md:pt-4 border-t border-slate-100/80 items-center overflow-x-auto scrollbar-hide">
