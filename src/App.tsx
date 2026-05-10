@@ -61,6 +61,8 @@ import {
   ChevronsLeftRight,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Brain,
   Smile,
   Meh,
@@ -6764,7 +6766,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
           {simulations.length > 0 && !loading && (
             <motion.div
               layout
-              className="fixed top-1/2 -translate-y-1/2 left-2 sm:left-4 z-[60] flex flex-col bg-white/30 backdrop-blur-xl rounded-none md:rounded-lg border border-white/30 overflow-visible"
+              className="fixed bottom-0 left-0 right-0 z-[60] flex flex-row justify-center items-center bg-white/80 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] overflow-visible"
             >
                 <AnimatePresence initial={false}>
                   {!isToolbarCollapsed && (
@@ -6773,7 +6775,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       initial={{ opacity: 0, width: 0, height: 0 }}
                     animate={{ opacity: 1, width: "auto", height: "auto" }}
                     exit={{ opacity: 0, width: 0, height: 0 }}
-                    className="flex flex-col items-center space-y-3 py-3 px-2 overflow-visible scrollbar-hide"
+                    className="flex flex-row items-center space-x-2 sm:space-x-4 py-2 px-3 sm:px-4 overflow-visible scrollbar-hide"
                   >
                     <div className="relative">
                       <Tooltip>
@@ -6787,7 +6789,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                         >
                           <Layers className="w-5 h-5" />
                         </TooltipTrigger>
-                        <TooltipContent side="right" className="font-semibold text-sm">
+                        <TooltipContent side="top" className="font-semibold text-sm">
                           Sections Menu
                         </TooltipContent>
                       </Tooltip>
@@ -6796,10 +6798,10 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                         {showSectionsMenu && (
                           <motion.div
                             key="sections-menu"
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            className="absolute left-[calc(100%+16px)] top-0 w-48 bg-white/90 backdrop-blur-md rounded-xl border border-slate-200/60 py-2 z-[70] flex flex-col pointer-events-auto overflow-hidden"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="absolute bottom-[calc(100%+16px)] left-0 sm:left-1/2 sm:-translate-x-1/2 w-48 bg-white/90 backdrop-blur-md rounded-xl border border-slate-200/60 py-2 z-[70] flex flex-col pointer-events-auto overflow-hidden shadow-xl origin-bottom-left sm:origin-bottom"
                           >
                             <button
                               className="px-4 py-2 text-sm text-left hover:bg-slate-100/80 text-slate-700 flex items-center space-x-3 w-full transition-colors"
@@ -6867,7 +6869,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       </AnimatePresence>
                     </div>
 
-                    <div className="w-full h-px bg-slate-200/60 my-1" />
+                    <div className="w-px h-6 bg-slate-300/40 shrink-0" />
 
                     <Tooltip>
                       <TooltipTrigger
@@ -6876,7 +6878,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       >
                         <Utensils className="w-5 h-5" />
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="font-semibold text-sm">
+                      <TooltipContent side="top" className="font-semibold text-sm">
                         Log Meal
                       </TooltipContent>
                     </Tooltip>
@@ -6888,7 +6890,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       >
                         <Smile className="w-5 h-5" />
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="font-semibold text-sm">
+                      <TooltipContent side="top" className="font-semibold text-sm">
                         Log Mood
                       </TooltipContent>
                     </Tooltip>
@@ -6900,7 +6902,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       >
                         <Droplet className="w-5 h-5" />
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="font-semibold text-sm">
+                      <TooltipContent side="top" className="font-semibold text-sm">
                         Log Biomarkers
                       </TooltipContent>
                     </Tooltip>
@@ -6912,7 +6914,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       >
                         <MessageCircle className="w-5 h-5" />
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="font-semibold text-sm">
+                      <TooltipContent side="top" className="font-semibold text-sm">
                         Wellbeing Advisor
                       </TooltipContent>
                     </Tooltip>
@@ -6926,7 +6928,7 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                       >
                         <Bell className="w-5 h-5" />
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="font-semibold text-sm">
+                      <TooltipContent side="top" className="font-semibold text-sm">
                         Notifications
                       </TooltipContent>
                     </Tooltip>
@@ -6934,20 +6936,20 @@ CRITICAL INSTRUCTION: You MUST output all text strings in ${language}.`;
                 )}
               </AnimatePresence>
 
-              <div className="flex border-t border-slate-200/50 w-full justify-center">
+              <div className="flex border-l border-slate-300/40 h-6 shrink-0 items-center justify-center px-2">
                 <Tooltip>
                   <TooltipTrigger
                     onClick={() => setIsToolbarCollapsed(!isToolbarCollapsed)}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center hover:bg-slate-100/50 text-slate-500 hover:text-slate-800 transition-colors m-2 rounded-full"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center hover:bg-slate-100/50 text-slate-500 hover:text-slate-800 transition-colors rounded-full"
                   >
                     {isToolbarCollapsed ? (
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronUp className="w-5 h-5" />
                     ) : (
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronDown className="w-5 h-5" />
                     )}
                   </TooltipTrigger>
                   <TooltipContent
-                    side="right"
+                    side="top"
                     className="font-semibold text-sm"
                   >
                     {isToolbarCollapsed ? "Expand Toolbar" : "Collapse Toolbar"}
