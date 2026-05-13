@@ -258,9 +258,9 @@ export async function generateHealthImage(prompt: string, referenceImage?: strin
       }
     }
     
-    // Fallback if the user's gpt-4.1 guidance endpoint didn't output an image structure we expect,
+    // Fallback if the user's gpt-5.4-mini guidance endpoint didn't output an image structure we expect,
     // let's just make a standard dall-e-3 call safely inside the same function.
-    console.warn("Could not find image output in gpt-4.1 structure, falling back to dall-e-3...");
+    console.warn("Could not find image output in gpt-5.4-mini structure, falling back to dall-e-3...");
     const fallbackResponse = await openai.images.generate({
       model: "dall-e-3",
       prompt: prompt.substring(0, 3999),
@@ -452,7 +452,7 @@ export async function generateActionPlan(
   `;
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite-preview', // Switch to flash-lite as requested by user
+      model: 'gemini-3.1-flash-lite', // Switch to flash-lite as requested by user
       contents: prompt,
     });
     return response.text || "Could not generate action plan.";
@@ -487,7 +487,7 @@ ${userContextSummary}`;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-3.1-flash-lite',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -613,7 +613,7 @@ ${userContextSummary}`;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-3.1-flash-lite',
       contents: fullContents,
       config: {
         systemInstruction: systemInstruction,
@@ -706,7 +706,7 @@ export async function generateCombinedHealthSimulation(
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -872,7 +872,7 @@ export async function generateHealthSimulation(
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -1078,7 +1078,7 @@ export async function analyzeBiomarkerLog(
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-3.1-flash-lite',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -1137,7 +1137,7 @@ export async function analyzeMood(
   `;
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -1206,7 +1206,7 @@ export async function generateWeeklyRecap(
   `;
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: prompt,
     });
     return response.text || "Unable to generate recap.";
@@ -1244,7 +1244,7 @@ export async function extractBiomarkers(base64Data: string, mimeType: string, la
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-3.1-flash-lite',
       contents: [
         {
           role: 'user',
@@ -1317,7 +1317,7 @@ export async function generateDailyQuests(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -1418,7 +1418,7 @@ Fill out the data accurately based on the provided patient data. Limit the repor
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-3.1-flash-lite',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         systemInstruction: "You are a clinical synthesis AI writing for medical professionals.",
@@ -1519,7 +1519,7 @@ Keep it to one paragraph. Avoid mentioning age or demographic numbers directly. 
   while (attempt <= maxRetries) {
       try {
           const response = await ai.models.generateContent({
-              model: 'gemini-3.1-flash-lite-preview',
+              model: 'gemini-3.1-flash-lite',
               contents: contents
           });
           return response.text || "A standard avatar.";
